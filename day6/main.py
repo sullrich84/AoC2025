@@ -3,9 +3,21 @@ from collections import defaultdict
 import re
 
 
-def parseData1(name="task"):
+def parseData(name="task"):
     file = open(f"{name}.txt").read().splitlines()
-    return [re.findall(r"\d+|[+*]", z) for z in file]
+    col_length = list(map(len, re.sub(r"\s([+*])", r",\1", file[-1]).split(",")))
+    ops = list(re.split(r"\s+", file[-1])[:-1])
+    nums, rows = ([], len(file[:-1]))
+
+    for r in range(rows):
+        col_nums, offset = ([], 0)
+        for cl in col_length:
+            col_nums.append(file[r][offset : offset + cl])
+            offset += cl + 1
+        nums.append(col_nums)
+
+    data = list(zip(*nums))
+    return (data, ops, col_length, rows)
 
 
 def parseData2(name="task"):
@@ -13,19 +25,20 @@ def parseData2(name="task"):
     return file
 
 
-def solve1(data):
-    ops = data[-1]
-    stack = {}
-    for line in data[:-1]:
-        for i, n in enumerate(line):
-            if i not in stack:
-                stack[i] = int(n)
+def solve1(input):
+    data, ops, _, _ = input
+    ans = 0
+
+    for i, line in enumerate(data):
+        t = 0
+        for n in line:
+            if ops[i] == "*":
+                t = int(n) if t == 0 else t * int(n)
             else:
-                if ops[i] == "+":
-                    stack[i] += int(n)
-                else:
-                    stack[i] *= int(n)
-    return sum(stack.values())
+                t += int(n)
+        ans += t
+
+    return ans
 
 
 def solve2(data):
@@ -82,5 +95,5 @@ def solve2(data):
 
 
 print("🎄 Day 6: XXX")
-print("Part 1:", solve1(parseData1("task")))
+print("Part 1:", solve1(parseData("sample")))
 print("Part 2:", solve2(parseData2("task")))
