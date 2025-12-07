@@ -1,5 +1,4 @@
-from icecream import ic
-from collections import defaultdict
+from math import prod
 import re
 
 
@@ -17,7 +16,7 @@ def parseData(name="task"):
         nums.append(col_nums)
 
     data = list(zip(*nums))
-    return (data, ops, col_length, rows)
+    return (data, ops, col_length)
 
 
 def parseData2(name="task"):
@@ -26,7 +25,7 @@ def parseData2(name="task"):
 
 
 def solve1(input):
-    data, ops, _, _ = input
+    data, ops, _ = input
     ans = 0
 
     for i, line in enumerate(data):
@@ -41,59 +40,21 @@ def solve1(input):
     return ans
 
 
-def solve2(data):
-    ops = data[-1]
-    col = -1
-    length = defaultdict(int)
-    operations = []
-    for char in list(ops):
-        if char in ["+", "*"]:
-            operations.append(char)
-            col += 1
-        length[col] += 1
-
-    for k in list(length.keys())[:-1]:
-        length[k] -= 1
-
-    matrix = defaultdict(list)
-    for line in data[:-1]:
-        off = 0
-        for col, line_length in enumerate(length.values()):
-            num = line[off : off + line_length]
-            matrix[col].append(num)
-            off += line_length + 1
-
-    m_cols = len(matrix[0])
-    m_rows = len(matrix)
-    m_vals = list(matrix.values())
-
-    res = []
-    for row in range(m_rows):
-        numbers = defaultdict(str)
-        for col in range(m_cols):
-            col_length = len(m_vals[row][col])
-            for i in range(col_length):
-                char = m_vals[row][col][i]
-                if char != " ":
-                    numbers[i] += char
-        res.append(numbers.values())
-
+def solve2(input):
+    data, ops, col_length = input
     ans = 0
-    for i, nums in enumerate(res):
-        total = 0
-        for n in nums:
-            if operations[i] == "+":
-                total += int(n)
-            else:
-                if total == 0:
-                    total = int(n)
-                else:
-                    total *= int(n)
-        ans += total
 
+    for i, line in enumerate(data):
+        c_len, nums = (col_length[i], [])
+        for l in range(c_len):
+            nums.append(int("".join([c[l] for c in line])))
+        if ops[i] == "*":
+            ans += prod(nums)
+        else:
+            ans += sum(nums)
     return ans
 
 
-print("🎄 Day 6: XXX")
+print("🎄 Day 6: Trash Compactor")
 print("Part 1:", solve1(parseData("sample")))
-print("Part 2:", solve2(parseData2("task")))
+print("Part 2:", solve2(parseData("sample")))
