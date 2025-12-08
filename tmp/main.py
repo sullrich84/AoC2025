@@ -1,4 +1,6 @@
 from icecream import ic
+from math import sqrt, prod
+from heapq import heapify, heappop, heappush
 
 
 def parseData(name="task"):
