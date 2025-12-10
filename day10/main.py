@@ -1,9 +1,6 @@
 from icecream import ic
-from math import sqrt, prod
-from functools import cache
-from heapq import heapify, heappop, heappush
-from collections import defaultdict, deque, Counter
-from itertools import permutations, combinations, cycle, product
+from itertools import product
+import z3
 
 
 def parseData(name="task"):
@@ -45,30 +42,30 @@ def solve1(rows):
 
 def solve2(rows):
     ans = 0
+
+    def z3_solve(btns, tar):
+        opt = z3.Optimize()
+        vars = [z3.Int(f"btn{i}") for i, _ in enumerate(btns)]
+
+        for var in vars:
+            # Constrain var to be >= 0 !!!
+            opt.add(var >= 0)
+
+        for i in range(len(tar)):
+            c_sum = z3.Sum([vars[j] for j in range(len(btns)) if i in btns[j]])
+            opt.add(c_sum == tar[i])
+
+        total = z3.Sum(vars)
+        opt.minimize(total)
+        opt.check()
+
+        return opt.model().eval(total).as_long()
+
     for row in rows:
-        masks = row[1:-1]
-        jolts = row[-1]
-
-        @cache
-        def dp(idx, remaining):
-            if idx == len(masks):
-                return 0 if all(r == 0 for r in remaining) else float("inf")
-
-            min_p = float("inf")
-            max_presses = max((remaining[j] for j in masks[idx]), default=0)
-
-            for presses in range(max_presses + 1):
-                new_rem = list(remaining)
-                for j in masks[idx]:
-                    new_rem[j] -= presses
-
-                cost = presses + dp(idx + 1, tuple(new_rem))
-                min_p = min(min_p, cost)
-
-            return min_p
-
-        min_presses = dp(0, tuple(jolts))
-        ans += min_presses
+        buttons = row[1:-1]
+        target = row[-1]
+        result = z3_solve(buttons, target)
+        ans += result
     return ans
 
 
