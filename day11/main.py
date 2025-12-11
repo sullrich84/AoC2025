@@ -1,62 +1,57 @@
-from icecream import ic
-from math import sqrt, prod
 from functools import cache
 from heapq import heapify, heappop, heappush
-from collections import defaultdict, deque, Counter
-from itertools import permutations, combinations, cycle
+from collections import defaultdict
 
 
 def parseData(name="task"):
-    file = [
-        l.replace(":", "").split(" ") for l in open(f"{name}.txt").read().splitlines()
-    ]
-    return {s[0]: s[1:] for s in file}
+    servers = defaultdict(list)
+    for line in open(f"{name}.txt").read().splitlines():
+        node, adj = line.split(": ")
+        servers[node] = adj.split(" ")
+    return servers
 
 
-def solve1(servers, start, end):
-    stack = [(0, [], start)]
-
+def solve1(servers):
+    stack = [(0, [], "you")]
     heapify(stack)
-    paths = list()
-    seen = set()
 
+    paths = list()
     while stack:
         steps, path, cur = heappop(stack)
         npath = path + [cur]
 
-        key = ",".join(npath)
-        if key in seen:
-            continue
-        seen.add(key)
-
-        if cur == end:
+        if cur == "out":
             paths.append(npath)
             continue
 
-        if cur not in servers:
-            continue
-
         for out in servers[cur]:
-            if out in npath:
-                continue
             nsteps = steps + 1
             heappush(stack, (nsteps, npath, out))
 
-    return paths
+    return len(paths)
 
 
-def solve2(data):
-    ans = 0
+def solve2(servers):
+    @cache
+    def count_paths(start, end):
+        if start == end:
+            return 1
+        return sum(count_paths(srv, end) for srv in servers[start])
 
-    path1 = solve1(data, "svr", "fft")
-    ic(len(path1))
-    path2 = solve1(data, "fft", "dac")
-    ic(len(path2))
+    via_dac = (
+        count_paths("svr", "dac")
+        * count_paths("dac", "fft")
+        * count_paths("fft", "out")
+    )
+    via_fft = (
+        count_paths("svr", "fft")
+        * count_paths("fft", "dac")
+        * count_paths("dac", "out")
+    )
 
-    ic(path1, path2)
-    return len(path1) + len(path2)
+    return via_dac + via_fft
 
 
-print("🎄 Day 11: XXX")
-print("Part 1:", len(solve1(parseData("task"), "you", "out")))
+print("🎄 Day 11: Reactor")
+print("Part 1:", solve1(parseData("task")))
 print("Part 2:", solve2(parseData("sample")))
